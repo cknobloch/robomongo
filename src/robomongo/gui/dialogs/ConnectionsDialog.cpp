@@ -30,7 +30,7 @@
 
 namespace Robomongo
 {
-    
+
     /**
      * @brief Simple ListWidgetItem that has several convenience methods.
      */
@@ -76,7 +76,7 @@ namespace Robomongo
 
             // Header "Attributes" (column[2])
             setText(2, _connection->isReplicaSet() ? "Replica Set" : "");
-            
+
             if (_connection->sslSettings()->sslEnabled())
                 setText(2, text(2) + (text(2).isEmpty() ? "SSL" : ", SSL"));
 
@@ -107,8 +107,10 @@ namespace Robomongo
     ConnectionsDialog::ConnectionsDialog(SettingsManager *settingsManager, bool checkForImported, QWidget *parent)
         : QDialog(parent), _settingsManager(settingsManager), _checkForImported(checkForImported)
     {
+        _settingsManager->load(); // reload settings from external source
+
         setWindowIcon(GuiRegistry::instance().connectIcon());
-        setWindowTitle("MongoDB Connections");
+        setWindowTitle("MongoDB Connections (TIP: close/re-open to refresh settings from disk)");
 
         // Remove help button (?)
         setWindowFlags(this->windowFlags() & ~Qt::WindowContextHelpButtonHint);
@@ -264,7 +266,7 @@ namespace Robomongo
      * @brief Initiate 'add' action, usually when user clicked on Add button
      */
     void ConnectionsDialog::add()
-    {       
+    {
         auto newConnSettings = std::unique_ptr<ConnectionSettings>(new ConnectionSettings(false));
         ConnectionDialog editDialog(newConnSettings.get());
 
@@ -275,7 +277,7 @@ namespace Robomongo
 
         add(newConnSettings.get());
         _settingsManager->addConnection(newConnSettings.release());
-        
+
         _listWidget->setFocus();
     }
 
@@ -301,7 +303,7 @@ namespace Robomongo
             return;
         }
 
-        connection->apply(editDialog.connection());       
+        connection->apply(editDialog.connection());
 
         // on linux focus is lost - we need to activate connections dialog
         activateWindow();
@@ -314,7 +316,7 @@ namespace Robomongo
                 item->setConnection(connection);
                 break;
             }
-        }        
+        }
     }
 
     /**
@@ -364,7 +366,7 @@ namespace Robomongo
         // Clone connection
         ConnectionSettings *connection = currentItem->connection()->clone();
         // This is a special clone which will actually be a new connection and must have unique UUID
-        connection->setUuid(QUuid::createUuid().toString());    
+        connection->setUuid(QUuid::createUuid().toString());
         std::string newConnectionName = "Copy of " + connection->connectionName();
 
         connection->setConnectionName(newConnectionName);
@@ -382,6 +384,10 @@ namespace Robomongo
         _settingsManager->addConnection(connection);
         add(connection);
     }
+
+    //void ConnectionsDialog::reloadConnectionSettings()
+    //{
+    //}
 
     /**
      * @brief Handles ListWidget layoutChanged() signal
